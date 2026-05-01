@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Louis — Developer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Syne:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #05080f;
+  --surface: #0c1120;
+  --surface2: #111827;
+  --border: rgba(255,255,255,0.07);
+  --text: #e8edf5;
+  --muted: #6b7a99;
+  --dim: #3a4560;
+  --sky: #5eaeff;
+  --violet: #9b7eff;
+  --glow-sky: rgba(94,174,255,0.12);
+  --glow-violet: rgba(155,126,255,0.10);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* ─── NOISE OVERLAY ─── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+/* ─── CANVAS ─── */
+#bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ─── NAV ─── */
+nav {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 60px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(5,8,15,0.7);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.25rem;
+  color: var(--text);
+  letter-spacing: 0.01em;
+}
+
+.nav-links {
+  display: flex;
+  gap: 36px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+/* ─── HERO ─── */
+.hero {
+  position: relative;
+  z-index: 1;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0 60px;
+  max-width: 1000px;
+}
+
+.hero-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--sky);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hero-eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--sky);
+}
+
+.hero h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(3.2rem, 7vw, 6rem);
+  line-height: 1.08;
+  color: var(--text);
+  margin-bottom: 24px;
+}
+
+.hero h1 em {
+  font-style: italic;
+  background: linear-gradient(135deg, var(--sky), var(--violet));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-sub {
+  font-size: 1.05rem;
+  color: var(--muted);
+  max-width: 480px;
+  line-height: 1.75;
+  margin-bottom: 40px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.btn-primary {
+  padding: 13px 30px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--sky), var(--violet));
+  color: #fff;
+  font-family: 'Syne', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.2s, transform 0.2s;
+  display: inline-block;
+}
+
+.btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+
+.btn-ghost {
+  padding: 13px 30px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-family: 'Syne', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.2s, border-color 0.2s;
+  display: inline-block;
+}
+
+.btn-ghost:hover { color: var(--text); border-color: var(--dim); }
+
+/* ─── SCROLL INDICATOR ─── */
+.scroll-hint {
+  position: absolute;
+  bottom: 40px;
+  left: 60px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--dim);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: 'DM Mono', monospace;
+}
+
+.scroll-arrow {
+  width: 20px;
+  height: 20px;
+  border-right: 1px solid var(--dim);
+  border-bottom: 1px solid var(--dim);
+  transform: rotate(45deg);
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: rotate(45deg) translateY(0); }
+  50% { transform: rotate(45deg) translateY(4px); }
+}
+
+/* ─── SECTIONS ─── */
+section {
+  position: relative;
+  z-index: 1;
+  padding: 120px 60px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--sky);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-label::before {
+  content: '';
+  display: block;
+  width: 20px;
+  height: 1px;
+  background: var(--sky);
+}
+
+.section-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.15;
+  margin-bottom: 60px;
+  color: var(--text);
+}
+
+/* ─── ABOUT ─── */
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: start;
+}
+
+.about-text p {
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.85;
+  margin-bottom: 20px;
+}
+
+.about-text p strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.about-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stack-group-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 6px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag {
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--muted);
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.tag:hover { color: var(--text); border-color: var(--dim); }
+
+.tag.highlight {
+  background: var(--glow-sky);
+  border-color: rgba(94,174,255,0.25);
+  color: var(--sky);
+}
+
+/* ─── PROJECTS ─── */
+.projects-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.project-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+
+.project-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--sky), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.project-card:hover {
+  border-color: var(--dim);
+  transform: translateY(-4px);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+}
+
+.project-card:hover::before { opacity: 1; }
+
+.project-card.featured {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: center;
+  gap: 40px;
+  padding: 40px;
+}
+
+.project-card.featured::before {
+  background: linear-gradient(90deg, transparent, var(--violet), transparent);
+}
+
+.project-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sky);
+  background: var(--glow-sky);
+  border: 1px solid rgba(94,174,255,0.2);
+  padding: 4px 10px;
+  border-radius: 4px;
+  align-self: flex-start;
+}
+
+.project-card.featured .project-badge {
+  color: var(--violet);
+  background: var(--glow-violet);
+  border-color: rgba(155,126,255,0.2);
+}
+
+.project-info { flex: 1; }
+
+.project-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.5rem;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.project-card.featured .project-name { font-size: 1.9rem; }
+
+.project-desc {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.75;
+  margin-bottom: 20px;
+}
+
+.project-tech {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.project-tech span {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--dim);
+  background: var(--surface2);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.project-arrow {
+  font-size: 1.2rem;
+  color: var(--dim);
+  transition: color 0.2s, transform 0.2s;
+  align-self: flex-end;
+}
+
+.project-card:hover .project-arrow { color: var(--sky); transform: translate(3px, -3px); }
+
+.project-visual {
+  width: 220px;
+  height: 140px;
+  background: linear-gradient(135deg, var(--glow-violet), var(--glow-sky));
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.project-visual svg { opacity: 0.6; }
+
+/* ─── TERMINAL ─── */
+.terminal-wrap {
+  background: #000;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  overflow: hidden;
+  font-family: 'DM Mono', monospace;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+}
+
+.terminal-bar {
+  background: #111;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.terminal-dots {
+  display: flex;
+  gap: 7px;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.dot.red   { background: #ff5f56; }
+.dot.amber { background: #ffbd2e; }
+.dot.green { background: #27c93f; }
+
+.terminal-title {
+  font-size: 0.72rem;
+  color: #555;
+  flex: 1;
+  text-align: center;
+}
+
+.terminal-body {
+  padding: 24px;
+  min-height: 220px;
+  font-size: 0.85rem;
+  line-height: 1.9;
+  color: #ccc;
+}
+
+.t-prompt { color: #5eaeff; }
+.t-path   { color: #9b7eff; }
+.t-cmd    { color: #e8edf5; }
+.t-out    { color: #6b7a99; padding-left: 0; }
+.t-success { color: #3ddc84; }
+.t-warn   { color: #ffbd2e; }
+.cursor {
+  display: inline-block;
+  width: 9px;
+  height: 1.1em;
+  background: #5eaeff;
+  vertical-align: middle;
+  animation: blink 1.1s step-end infinite;
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ─── FADE-IN ─── */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: none;
+}
+
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+
+/* ─── DIVIDER ─── */
+.divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 0 auto;
+}
+
+/* ─── FOOTER ─── */
+footer {
+  position: relative;
+  z-index: 1;
+  padding: 50px 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border);
+  color: var(--dim);
+  font-size: 0.8rem;
+  font-family: 'DM Mono', monospace;
+}
+
+footer a {
+  color: var(--dim);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+footer a:hover { color: var(--sky); }
+
+.footer-links { display: flex; gap: 28px; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+  nav { padding: 18px 24px; }
+  .nav-links { gap: 20px; }
+  .hero { padding: 0 24px; }
+  .scroll-hint { left: 24px; }
+  section { padding: 80px 24px; }
+  .about-grid { grid-template-columns: 1fr; gap: 40px; }
+  .projects-grid { grid-template-columns: 1fr; }
+  .project-card.featured { flex-direction: column; }
+  .project-visual { width: 100%; }
+  footer { flex-direction: column; gap: 16px; text-align: center; }
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="bg"></canvas>
+
+<!-- NAV -->
+<nav>
+  <span class="nav-logo">Louis</span>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="#terminal">Terminal</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Software Developer</div>
+  <h1>Building tools that<br><em>actually work.</em></h1>
+  <p class="hero-sub">I write Python, tinker with Linux, and ship software that monitors systems, automates pipelines, and just runs quietly in the background.</p>
+  <div class="hero-actions">
+    <a href="#projects" class="btn-primary">See my work</a>
+    <a href="#about" class="btn-ghost">About me</a>
+  </div>
+  <div class="scroll-hint">
+    <div class="scroll-arrow"></div>
+    scroll
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ABOUT -->
+<section id="about" class="reveal">
+  <div class="section-label">About</div>
+  <h2 class="section-title">Who I am</h2>
+  <div class="about-grid">
+    <div class="about-text">
+      <p>I'm a 17 year old developer who loves building things that live close to the hardware. Whether it's a <strong>system monitor with a full GUI</strong>, a <strong>CI/CD pipeline that ships Linux packages</strong>, or a quick Python script that saves me 20 minutes a day — I care about making it work properly.</p>
+      <p>I spend a lot of time on Linux, know my way around GitHub Actions, and enjoy the kind of problem-solving that happens when something <strong>refuses to build</strong> and you have to dig three layers deep to figure out why.</p>
+      <p>When I'm not writing code, I'm probably reading about cars or obsessing over something else with entirely too many moving parts. I got into Information Technology from a young age, because my Father actively works in the industry as an IT infrastructure engineer.</p>
+    </div>
+    <div class="about-stack">
+      <div>
+        <div class="stack-group-label">Languages</div>
+        <div class="tags">
+          <span class="tag highlight">Python</span>
+          <span class="tag">Bash</span>
+          <span class="tag">YAML</span>
+          <span class="tag">HTML / CSS</span>
+        </div>
+      </div>
+      <div style="margin-top: 20px;">
+        <div class="stack-group-label">Tooling</div>
+        <div class="tags">
+          <span class="tag">GitHub Actions</span>
+          <span class="tag">PyInstaller</span>
+          <span class="tag">nfpm</span>
+          <span class="tag">flake8</span>
+          <span class="tag">pylint</span>
+        </div>
+      </div>
+      <div style="margin-top: 20px;">
+        <div class="stack-group-label">Platforms</div>
+        <div class="tags">
+          <span class="tag">Linux</span>
+          <span class="tag">Windows</span>
+          <span class="tag">Cloudflare Pages</span>
+          <span class="tag">PyPI</span>
+        </div>
+      </div>
+      <div style="margin-top: 20px;">
+        <div class="stack-group-label">Libraries</div>
+        <div class="tags">
+          <span class="tag">CustomTkinter</span>
+          <span class="tag">psutil</span>
+          <span class="tag">subprocess</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PROJECTS -->
+<section id="projects" class="reveal">
+  <div class="section-label">Projects</div>
+  <h2 class="section-title">Things I've built</h2>
+  <div class="projects-grid">
+
+    <!-- Featured -->
+    <a href="https://github.com/louisboii747/HardwareMon" class="project-card featured reveal reveal-delay-1" target="_blank">
+      <div class="project-visual">
+        <svg width="64" height="64" fill="none" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="14" width="48" height="32" rx="4" stroke="#9b7eff" stroke-width="1.5"/>
+          <rect x="12" y="18" width="40" height="24" rx="2" fill="rgba(155,126,255,0.08)"/>
+          <path d="M16 34 L22 26 L28 30 L34 22 L40 28 L48 20" stroke="#9b7eff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="34" cy="22" r="2" fill="#9b7eff"/>
+          <rect x="28" y="46" width="8" height="4" fill="#9b7eff" opacity="0.5"/>
+          <rect x="16" y="50" width="32" height="1.5" rx="0.75" fill="#9b7eff" opacity="0.3"/>
+        </svg>
+      </div>
+      <div class="project-info">
+        <span class="project-badge">Featured project</span>
+        <h3 class="project-name">HardwareMon</h3>
+        <p class="project-desc">A cross-platform hardware monitoring application for Windows and Linux. Features animated arc gauges, sparkline graphs, per-core CPU bars, a process table, and full disk and network stats. Published to PyPI with .deb and .rpm packages via automated CI/CD.</p>
+        <div class="project-tech">
+          <span>Python</span>
+          <span>CustomTkinter</span>
+          <span>GitHub Actions</span>
+          <span>nfpm</span>
+          <span>PyPI</span>
+        </div>
+      </div>
+      <div class="project-arrow">↗</div>
+    </a>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TERMINAL -->
+<section id="terminal" class="reveal">
+  <div class="section-label">Terminal</div>
+  <h2 class="section-title">See it in action</h2>
+  <div class="terminal-wrap">
+    <div class="terminal-bar">
+      <div class="terminal-dots">
+        <div class="dot red"></div>
+        <div class="dot amber"></div>
+        <div class="dot green"></div>
+      </div>
+      <span class="terminal-title">louis@arch — ~/HardwareMon</span>
+    </div>
+    <div class="terminal-body" id="terminalBody"></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<footer>
+  <span>© 2026 Louis</span>
+  <div class="footer-links">
+    <a href="https://github.com/louisboii747" target="_blank">GitHub</a>
+    <a href="https://github.com/louisboii747/HardwareMon" target="_blank">HardwareMon</a>
+    <a href="https://pypi.org/project/HardwareMon/" target="_blank">PyPI</a>
+  </div>
+</footer>
+
+<script>
+/* ─── PARTICLE CANVAS ─── */
+const canvas = document.getElementById('bg');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+const COLORS = ['rgba(94,174,255,', 'rgba(155,126,255,'];
+
+class Particle {
+  constructor() { this.reset(true); }
+  reset(initial = false) {
+    this.x = Math.random() * canvas.width;
+    this.y = initial ? Math.random() * canvas.height : canvas.height + 10;
+    this.size = Math.random() * 1.4 + 0.4;
+    this.speedY = -(Math.random() * 0.3 + 0.1);
+    this.speedX = (Math.random() - 0.5) * 0.15;
+    this.opacity = Math.random() * 0.5 + 0.1;
+    this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+  }
+  update() {
+    this.x += this.speedX;
+    this.y += this.speedY;
+    if (this.y < -10) this.reset();
+  }
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = this.color + this.opacity + ')';
+    ctx.fill();
+  }
+}
+
+const particles = Array.from({ length: 100 }, () => new Particle());
+
+// Constellation lines
+function drawLines() {
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 110) {
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.strokeStyle = `rgba(94,174,255,${0.04 * (1 - dist/110)})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+function animateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawLines();
+  particles.forEach(p => { p.update(); p.draw(); });
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+/* ─── TERMINAL TYPER ─── */
+const lines = [
+  { text: '', delay: 0 },
+  { prompt: true, cmd: 'git status', delay: 300 },
+  { out: 'On branch main — your branch is up to date.', delay: 900, cls: 't-out' },
+  { out: 'nothing to commit, working tree clean', delay: 1100, cls: 't-success' },
+  { text: '', delay: 1400 },
+  { prompt: true, cmd: 'python -m hardwaremon --version', delay: 1500 },
+  { out: 'HardwareMon v2.1.0', delay: 2100, cls: 't-out' },
+  { text: '', delay: 2300 },
+  { prompt: true, cmd: 'gh workflow run release.yml', delay: 2400 },
+  { out: '✓ Triggered release workflow', delay: 3000, cls: 't-success' },
+  { out: '→ Building .deb and .rpm packages…', delay: 3200, cls: 't-warn' },
+  { out: '→ Deploying to Cloudflare Pages…', delay: 3600, cls: 't-warn' },
+  { out: '✓ APT and YUM repos updated', delay: 4200, cls: 't-success' },
+  { out: '✓ PyPI release published', delay: 4600, cls: 't-success' },
+  { text: '', delay: 5000 },
+  { prompt: true, cmd: '', delay: 5100, cursor: true },
+];
+
+const body = document.getElementById('terminalBody');
+let lineElements = [];
+
+async function typeTerminal() {
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i];
+    await new Promise(r => setTimeout(r, i === 0 ? 800 : (l.delay - (lines[i-1]?.delay || 0))));
+
+    const div = document.createElement('div');
+    body.appendChild(div);
+    lineElements.push(div);
+
+    if (l.prompt) {
+      div.innerHTML = `<span class="t-prompt">louis@arch</span> <span class="t-path">~/HardwareMon</span> <span style="color:#6b7a99">❯</span> <span class="t-cmd"></span>`;
+      const cmdSpan = div.querySelector('.t-cmd');
+      for (const ch of l.cmd) {
+        await new Promise(r => setTimeout(r, 38 + Math.random() * 30));
+        cmdSpan.textContent += ch;
+      }
+      if (l.cursor) {
+        const cur = document.createElement('span');
+        cur.className = 'cursor';
+        div.appendChild(cur);
+      }
+    } else if (l.out !== undefined) {
+      div.className = l.cls || '';
+      div.textContent = l.out;
+    } else {
+      div.innerHTML = '&nbsp;';
+    }
+  }
+}
+
+typeTerminal();
+
+/* ─── INTERSECTION REVEAL ─── */
+const revealEls = document.querySelectorAll('.reveal');
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      io.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+revealEls.forEach(el => io.observe(el));
+</script>
+</body>
+</html>
